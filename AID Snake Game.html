@@ -1,0 +1,617 @@
+<html>
+
+      <canvas id="mycanvas" width="1000" height="600" style=" border: 3px solid black"></canvas>
+    
+  <script>
+
+    var g_Canvas = document.getElementById("mycanvas");
+    var g_Ctx = g_Canvas.getContext("2d");
+      
+    var g_FrameRate = 30;
+    var g_TimeInterval = 1000/g_FrameRate;
+      
+    var g_IsGameActive = 0;
+    var g_IsMainMenuActive = 1;
+    var g_IsInstrMenuActive = 0;
+    var g_IsGameOverActive = 0;
+      
+    var g_CanvasImage = new Image()
+    g_CanvasImage.src = "SnakeImage.jpg";
+      
+    var g_CanvasImage1 = new Image()
+    g_CanvasImage1.src = "SnakebackG.jpg";
+      
+      
+      class C_Nodes
+      {
+          constructor(x,y,size)
+          {
+             this.NodeXpos = x;
+             this.NodeYpos = y;
+             this.NodeSize = size;
+           
+             
+             
+          }
+          
+          m_DrawNode(l_Ctx)
+          {
+              
+              l_Ctx.fillStyle = "green"
+              l_Ctx.fillRect(this.NodeXpos,this.NodeYpos,this.NodeSize,this.NodeSize)
+              l_Ctx.strokeStyle = "black"
+              l_Ctx.strokeRect(this.NodeXpos,this.NodeYpos,this.NodeSize,this.NodeSize)
+          }
+          
+      }
+      
+      class C_Snake
+      {
+          constructor(l_snakeXpos,l_snakeYpos,l_size)
+          {
+              this.SnakeXpos = l_snakeXpos;
+              this.SnakeYpos = l_snakeYpos;
+              this.SnakeNodeSize = l_size;
+              
+              this.SnakeXCenter = l_snakeXpos + l_size/2; 
+              this.SnakeYCenter = l_snakeYpos + l_size/2;
+              
+              this.MaxCount = 100;
+              this.ActiveCount = 5;
+              this.NodeArray = new Array();
+              this.SnakeSpeed = 10;
+              
+              this.DistanceBetweenNodes = 0;
+              
+              this.Is_AkeyActive = 0; 
+              this.Is_DkeyActive = 0;
+              this.Is_WkeyActive = 0;
+              this.Is_SkeyActive = 0;
+              
+              this.PosXArray = new Array();
+              this.PosYArray = new Array();
+              
+              this.Pos_ArrayLength = ((this.MaxCount - 1) * this.SnakeNodeSize);
+     
+            
+          }
+          
+          m_Init()
+          {
+                 
+                  
+            for(var i=0;i<this.MaxCount;i++)
+              {
+                     this.NodeArray[i] = new C_Nodes(this.SnakeXpos,this.SnakeYpos,this.SnakeNodeSize);
+                     this.SnakeXpos += this.NodeArray[i].NodeSize;        
+              }
+              
+              this.PosXArray[0]= this.NodeArray[0].NodeXpos;
+              this.PosYArray[0]= this.NodeArray[0].NodeYpos;
+              
+              for(var i =1; i <= this.Pos_ArrayLength; i++)
+                  {
+                      this.PosXArray[i] = this.PosXArray[i-1] + 1;
+                      this.PosYArray[i] = this.PosYArray[i-1];
+                      
+                  }
+              
+              console.log(this.PosXArray);
+              console.log(this.PosYArray);
+              
+          }
+          
+      
+          m_DrawSnake(l_Ctx)
+          { 
+              for(var i=0;i<this.ActiveCount;i++)
+                {
+                    this.NodeArray[i].m_DrawNode(l_Ctx);
+                }
+          }
+          
+      m_MoveSnake()
+      {
+          
+            this.SnakeXCenter = this.NodeArray[0].NodeXpos + (this.NodeArray[0].NodeSize/2);
+            this.SnakeYCenter = this.NodeArray[0].NodeYpos + (this.NodeArray[0].NodeSize/2);
+          
+            if(this.Is_AkeyActive == 1 ||this.Is_DkeyActive == 1 ||this.Is_WkeyActive == 1 ||this.Is_SkeyActive == 1)
+                  {
+                    
+                      for(var j = 0; j<this.SnakeSpeed; j++)
+                          {
+                              
+                        for(var i = this.Pos_ArrayLength; i>0; i--)
+                            {
+                                
+                                this.PosXArray[i] = this.PosXArray[i-1];
+                                this.PosYArray[i] = this.PosYArray[i-1]; 
+                               
+                            } 
+                     
+                  
+              
+              if(this.Is_AkeyActive == 1)
+                  {
+                     this.PosXArray[0] -= 1;
+                      
+                  }
+              
+              if(this.Is_DkeyActive == 1 )
+                 {
+                     this.PosXArray[0] += 1;
+
+                 }
+              
+              if(this.Is_WkeyActive == 1 )
+                 {
+                     this.PosYArray[0] -= 1;
+                 }
+              
+              if(this.Is_SkeyActive == 1 )
+                 {
+                     this.PosYArray[0] += 1;
+                 }  
+                      
+                                    
+                              
+                          }
+                
+             var Sindex = 0
+             
+            for(var i = 0; i < this.PosXArray.length; i += this.SnakeNodeSize)
+                {
+                    this.NodeArray[Sindex].NodeXpos = this.PosXArray[i];
+                    this.NodeArray[Sindex].NodeYpos = this.PosYArray[i];
+                    Sindex++
+                }
+                      //console.log(this.PosXArray);
+                      // console.log(this.PosYArray);
+          
+                  }
+  
+          }
+         
+          
+          m_CollisionSnake()
+          {
+              if(this.PosXArray[0] < 0)
+                  {
+                      g_IsGameOverActive = 1;
+                      g_IsGameActive = 0;
+                      g_IsMainMenuActive = 1;
+                      g_IsInstrMenuActive = 0;
+                  }
+              
+              if(this.PosYArray[0] < 0)
+                  {
+                      g_IsGameOverActive = 1;
+                      g_IsGameActive = 0;
+                  }
+              
+              if(this.PosXArray[0] + this.SnakeNodeSize > g_Canvas.width)
+                  {
+                      g_IsGameOverActive = 1; 
+                      g_IsGameActive = 0;
+                  }
+              
+              if(this.PosYArray[0] + this.SnakeNodeSize  > g_Canvas.height)
+                  {
+                      g_IsGameOverActive = 1; 
+                      g_IsGameActive = 0;
+                  }
+          }
+      }
+      
+     class C_Food
+         {
+             constructor(foodxpos,foodypos,foodsize)
+             {
+                 this.FoodXpos = foodxpos;
+                 this.FoodYpos = foodypos;
+                 this.FoodSize = foodsize;
+                 this.Colour = "red" ;
+                 this.FoodXCenter = this.FoodXpos + (this.FoodSize/2);
+                 this.FoodYCenter = this.FoodYpos + (this.FoodSize/2);
+                 this.FoodTimer = 0;
+                 this.ColourTimer = 0;
+                
+             }
+             
+             m_DrawFood(l_Ctx)
+             {
+                   this.ColourTimer++
+                 
+                 if(this.ColourTimer <= 120)
+                     {
+                        this.Colour = "red"; 
+                     }
+
+                 if(this.ColourTimer >= 120 && this.ColourTimer <= 240)
+                     {
+                        this.Colour = "blue"; 
+                     } 
+                 
+                 if(this.ColourTimer >= 240 && this.ColourTimer <= 360)
+                     {
+                        this.Colour = "pink";
+                     } 
+                 
+                 if(this.ColourTimer >= 360 && this.ColourTimer <= 480)
+                     {
+                         this.Colour = "yellow";
+                     }
+                 if(this.ColourTimer >= 480 && this.ColourTimer <= 600)
+                     {
+                         this.ColourTimer = 0;
+                     }
+
+                  l_Ctx.fillStyle = this.Colour  
+                  l_Ctx.fillRect(this.FoodXpos,this.FoodYpos,this.FoodSize,this.FoodSize);
+                  l_Ctx.strokeStyle = "black";
+                  l_Ctx.strokeRect(this.FoodXpos,this.FoodYpos,this.FoodSize,this.FoodSize);
+                 
+             }
+             m_FoodTime()
+             {
+                 this.FoodTimer++
+                 
+                 if(this.FoodTimer >= 120)
+                     {
+                         this.m_ResetPosition();
+                     }
+                 
+             }
+             
+             m_ResetPosition()
+             {
+                 this.FoodTimer = 0;
+                         
+                         
+                 this.FoodXpos = Math.round(Math.random()*((g_Canvas.width - 100) -Snake_1.SnakeNodeSize)+Snake_1.SnakeNodeSize);
+
+                 this.FoodXCenter = this.FoodXpos + (this.FoodSize/2);
+
+
+                 this.FoodYpos = Math.round(Math.random()*((g_Canvas.height -100) -Snake_1.SnakeNodeSize)+Snake_1.SnakeNodeSize);
+
+                 this.FoodYCenter = this.FoodYpos + (this.FoodSize/2);
+             }
+             
+             
+         }
+        
+      
+     function f_FindDistance(x1,x2,y1,y2)
+       { 
+             var l_Distance = Math.sqrt(Math.pow(x2 - x1,2)+Math.pow(y2 - y1,2))
+             return l_Distance
+       }   
+      
+      var g_DistanceSnakeFood = 0;
+      var g_IsSnakeCollideFood = 0;
+      
+    function f_CollisionSnakeFood()
+       {
+           
+          g_DistanceSnakeFood = f_FindDistance(Snake_1.SnakeXCenter,Food_1.FoodXCenter,Snake_1.SnakeYCenter,Food_1.FoodYCenter)
+
+
+          if(g_DistanceSnakeFood <= (Snake_1.SnakeNodeSize/2 + Food_1.FoodSize/2))
+             { 
+                 if(Food_1.Colour == "red")
+                     {
+                         if(Snake_1.ActiveCount >=3)
+                             {
+                                 Snake_1.ActiveCount -= 1;
+                             }
+                         g_Score += 1;
+                         Food_1.m_ResetPosition();
+                     }
+                 
+                 if(Food_1.Colour == "blue")
+                     {
+                          Snake_1.ActiveCount += 1;
+                          g_Score += 1;
+                          Food_1.m_ResetPosition();
+                     }
+                 
+                 if(Food_1.Colour == "pink")
+                     {
+                         Snake_1.SnakeSpeed += 4;
+                         if(Snake_1.SnakeSpeed >=25)
+                             {
+                                 Snake_1.SnakeSpeed = 10;
+                             }
+                          Snake_1.ActiveCount += 2;
+                          g_Score += 1;
+                          Food_1.m_ResetPosition();
+                     }
+                 
+                 if(Food_1.Colour == "yellow")
+                     {
+                         Snake_1.SnakeSpeed -= 3;
+                         if(Snake_1.SnakeSpeed <=3)
+                             {
+                                 Snake_1.SnakeSpeed = 10;
+                             }
+                         if(Snake_1.ActiveCount >=3)
+                             {
+                                 Snake_1.ActiveCount -= 1;
+                             }
+                          g_Score += 1;
+                          Food_1.m_ResetPosition();
+                     }
+             }
+          
+           
+       }
+      
+  function f_MouseClick(event)
+     {
+            console.log(event.clientX+"__"+event.clientY);
+         
+    if(g_IsMainMenuActive == 1)
+        {
+            
+         if(event.clientX > 460 && event.clientX < 560 && event.clientY > 292 && event.clientY < 311)
+                {
+                    g_IsMainMenuActive = 0;
+                    g_IsGameActive = 1;
+                   
+                }
+            
+         if(event.clientX > 460 && event.clientX < 685 && event.clientY > 340 && event.clientY < 357)
+                {
+                    g_IsMainMenuActive = 1;
+                    g_IsGameActive = 0;
+                    g_IsInstrMenuActive = 1;
+                   
+                }
+        }
+            
+ if(g_IsInstrMenuActive == 1)
+      {
+             
+         if(event.clientX > 258 && event.clientX < 705 && event.clientY > 458 && event.clientY < 480)
+                {
+                   
+                    g_IsInstrMenuActive = 0;
+                    g_IsMainMenuActive = 1;
+                    g_IsGameActive = 0;
+                    
+                }
+              
+      }
+    
+ 
+                 
+                
+         
+     }
+      
+      
+      var g_HighScore = localStorage["g_HighScore"] || 0;
+      var g_Score = 0;    
+      
+      
+     
+     function f_ScoreCounter()
+          {
+               g_Ctx.font =  "40px calibri";
+               g_Ctx.fillText("SCORE " + g_Score ,30,30); 
+               g_Ctx.fillText("High Score : " + g_HighScore,600,30);
+              
+              if(g_Score > g_HighScore)
+                  {
+                      g_HighScore = g_Score;
+                      localStorage["g_HighScore"] = g_HighScore;
+                  }
+              
+          }
+      
+     function f_DrawMainMenu()
+      {
+          if(g_IsMainMenuActive == 1)
+              {
+                    g_Ctx.drawImage(g_CanvasImage,0,0,g_Canvas.width,g_Canvas.height)
+
+
+                    g_Ctx.font = "30px Georgia";
+
+                    
+                    g_Ctx.fillStyle = "yellow";
+                    g_Ctx.fillText("START",450,300)
+
+                    g_Ctx.fillStyle = "yellow";
+                    g_Ctx.fillText("INSTRUCTIONS",450,350);
+                  
+              }
+      }
+      
+    function f_DrawInstructionsMenu()
+      {
+           if(g_IsInstrMenuActive == 1)
+               {
+                    g_Ctx.drawImage(g_CanvasImage1,0,0,g_Canvas.width,g_Canvas.height);
+                   
+                    g_Ctx.strokeStyle = "black";
+                    g_Ctx.strokeRect(200,180,20,20);
+                    g_Ctx.fillStyle = "Red";
+                    g_Ctx.fillRect(200,180,20,20);
+                   
+                    g_Ctx.strokeStyle = "black";
+                    g_Ctx.strokeRect(200,230,20,20);
+                    g_Ctx.fillStyle = "Blue";
+                    g_Ctx.fillRect(200,230,20,20);
+                   
+                    g_Ctx.strokeStyle = "black";
+                    g_Ctx.strokeRect(200,280,20,20);
+                    g_Ctx.fillStyle = "Pink";
+                    g_Ctx.fillRect(200,280,20,20);
+                   
+                    g_Ctx.strokeStyle = "black";
+                    g_Ctx.strokeRect(200,330,20,20)
+                    g_Ctx.fillStyle = "yellow";
+                    g_Ctx.fillRect(200,330,20,20);
+                   
+                    g_Ctx.font = "30px Georgia";
+
+                    g_Ctx.fillStyle = "Red";
+                    g_Ctx.fillText("RED FOOD => SIZE DECREASE",300,200)
+
+                    g_Ctx.fillStyle = "Blue";
+                    g_Ctx.fillText("BLUE FOOD => SIZE INCREASE",300,250);
+                   
+                    g_Ctx.fillStyle = "Pink";
+                    g_Ctx.fillText("PINK FOOD => SPEED INCREASE",300,300);
+                   
+                    g_Ctx.fillStyle = "yellow";
+                    g_Ctx.fillText("YELLOW FOOD => SPEED DECREASE",300,350);
+                   
+                   
+                    g_Ctx.fillStyle = "Black";
+                    g_Ctx.fillText("CLICK HERE FOR MAIN MENU",250,470);
+                   
+                   
+                   
+                   
+                   
+               }
+      }
+      
+      
+     function f_DrawGameOverMenu()
+          {
+              if(g_IsGameOverActive == 1)
+                  {
+                        g_Ctx.font = "100px georgia"
+                        g_Ctx.drawImage(g_CanvasImage1,0,0,g_Canvas.width,g_Canvas.height);
+                        g_Ctx.fillStyle = "Red";
+                        g_Ctx.fillText("GAMEOVER",230,340);
+                        g_Ctx.font = "30px georgia"
+                        g_Ctx.fillText("PLAYER SCORE  :" + g_Score,400,477);
+                      
+                  }
+           
+          }
+       
+     
+     function f_ClearRect()
+             {
+                    g_Ctx.clearRect(0,0,g_Canvas.width,g_Canvas.height);
+                    g_Ctx.drawImage(g_CanvasImage1,0,0,g_Canvas.width,g_Canvas.height)
+             }
+      
+      
+            var Snake_1 = new C_Snake(300,300,20);
+            var Food_1 = new C_Food(200,150,20);
+     
+      Snake_1.m_Init();
+
+        function f_GameLoop()
+              {
+                  
+                  if(g_IsMainMenuActive == 0 && g_IsGameActive == 1)
+                      {
+                                    
+                           Snake_1.m_MoveSnake();
+                           Snake_1.m_CollisionSnake();
+                           f_CollisionSnakeFood();
+                           Food_1.m_FoodTime();
+
+
+                           f_ClearRect();
+
+
+                           Snake_1.m_DrawSnake(g_Ctx);
+                           Food_1.m_DrawFood(g_Ctx);
+                           f_ScoreCounter();
+                          
+                      }
+                           f_DrawMainMenu();
+                           f_DrawInstructionsMenu();
+                           f_DrawGameOverMenu();
+                      
+       
+              }
+            
+        
+    
+          var id = setInterval(f_GameLoop,g_TimeInterval)
+              
+     
+          
+     
+ function f_KeydownEventHandler(l_eventData)
+    {
+        
+        
+        if( l_eventData.keyCode == 68 )
+            {
+                 Snake_1.Is_DkeyActive = 1;                
+            }
+        
+        if( l_eventData.keyCode == 65)
+            {  
+                 Snake_1.Is_AkeyActive = 1;
+            }
+        
+        if(l_eventData.keyCode == 87 )
+            { 
+                 Snake_1.Is_WkeyActive = 1;   
+            }
+        
+        if(l_eventData.keyCode == 83 )
+            { 
+                 Snake_1.Is_SkeyActive = 1;  
+                 
+            }
+                    
+         }
+      
+               
+ function f_KeyupEventHandler(l_eventData)
+    {
+        if( l_eventData.keyCode == 68 )
+            {
+                 Snake_1.Is_DkeyActive = 0;                
+            }
+        
+        if( l_eventData.keyCode == 65)
+            {  
+                 Snake_1.Is_AkeyActive = 0;
+            }
+        
+        if(l_eventData.keyCode == 87 )
+            { 
+                 Snake_1.Is_WkeyActive = 0;   
+            }
+        
+        if(l_eventData.keyCode == 83 )
+            { 
+                 Snake_1.Is_SkeyActive = 0;  
+                 
+            }
+                    
+         }
+   
+    document.addEventListener("keyup",f_KeyupEventHandler); 
+    document.addEventListener("keydown",f_KeydownEventHandler); 
+    document.addEventListener("click",f_MouseClick);
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    </script>
+    
+</html>
+          
